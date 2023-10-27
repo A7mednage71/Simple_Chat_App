@@ -21,90 +21,107 @@ class Chat_page extends StatelessWidget {
   Widget build(BuildContext context) {
     var email = ModalRoute.of(context)!.settings.arguments;
     return StreamBuilder<QuerySnapshot>(
-        stream: messages.orderBy('time', descending: true).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            // print(snapshot.data!.docs[1]['nessage']);
-            List<RequsetDataModel> messagelist = [];
-            for (int i = 0; i < snapshot.data!.docs.length; i++) {
-              messagelist
-                  .add(RequsetDataModel.fromjson(snapshot.data!.docs[i]));
-            }
-            return Scaffold(
-              backgroundColor: Color(0xffFFFFFF),
-              appBar: AppBar(
-                automaticallyImplyLeading: false,
-                backgroundColor: Color(0xffF14052),
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      Klogo,
-                      width: 50,
-                      height: 50,
-                    ),
-                    Text('Chat'),
-                  ],
-                ),
-                centerTitle: true,
+      stream: messages.orderBy('time', descending: true).snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            color: Colors.white,
+            child: const Center(
+              child: CircularProgressIndicator(
+                color: Colors.blue,
               ),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      reverse: true,
-                      controller: _controller,
-                      itemCount: messagelist.length,
-                      itemBuilder: (BuildContext, Index) {
-                        return messagelist[Index].id == email
-                            ? Chatbuble(
-                                model: messagelist[Index],
-                              )
-                            : Chatbubleforfriend(model: messagelist[Index]);
-                      },
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          print('Eror: ' + snapshot.error.toString());
+
+          return Center(
+            child: Text(snapshot.error.toString()),
+          );
+        }
+
+        // print(snapshot.data!.docs[1]['nessage']);
+        List<RequsetDataModel> messagelist = [];
+        for (int i = 0; i < snapshot.data!.docs.length; i++) {
+          messagelist.add(RequsetDataModel.fromjson(snapshot.data!.docs[i]));
+        }
+        return Scaffold(
+          // backgroundColor: Color(0xffFFFFFF),
+          backgroundColor: Color(0xffEBF3E8),
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            backgroundColor: Color(0xffF14052),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  Klogo,
+                  width: 50,
+                  height: 50,
+                ),
+                Text('Chat'),
+              ],
+            ),
+            centerTitle: true,
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  reverse: true,
+                  controller: _controller,
+                  itemCount: messagelist.length,
+                  itemBuilder: (BuildContext, Index) {
+                    return messagelist[Index].id == email
+                        ? Chatbuble(
+                            model: messagelist[Index],
+                          )
+                        : Chatbubleforfriend(model: messagelist[Index]);
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: controller,
+                  onSubmitted: (data) {
+                    messages.add({
+                      'nessage': data,
+                      'time': DateTime.now(),
+                      'id': email,
+                    });
+                    controller.clear();
+                    _controller.animateTo(
+                      0,
+                      //_controller.position.maxScrollExtent,
+                      curve: Curves.easeOut,
+                      duration: const Duration(milliseconds: 500),
+                    );
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: Color(0xffA0E9FF),
+                    hintText: 'Send Message',
+                    suffixIcon: IconButton(
+                        onPressed: () {},
+                        icon: const Icon(
+                          Icons.send,
+                          color: kPrimaryColor,
+                        )),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      controller: controller,
-                      onSubmitted: (data) {
-                        messages.add({
-                          'nessage': data,
-                          'time': DateTime.now(),
-                          'id': email,
-                        });
-                        controller.clear();
-                        _controller.animateTo(
-                          0,
-                          //_controller.position.maxScrollExtent,
-                          curve: Curves.easeOut,
-                          duration: const Duration(milliseconds: 500),
-                        );
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Send Message',
-                        suffixIcon: IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.send,
-                              color: kPrimaryColor,
-                            )),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            );
-          } else {
-            return Text('Loading...');
-          }
-        });
+                ),
+              )
+            ],
+          ),
+        );
+      },
+    );
   }
 }

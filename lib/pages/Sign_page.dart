@@ -68,7 +68,7 @@ class _Sign_pageState extends State<Sign_page> {
                   ),
                   TexTField(
                     icon: Icon(Icons.person),
-                    obsurre: true,
+                    obsurre: false,
                     word: (data) {
                       Fullname = data;
                     },
